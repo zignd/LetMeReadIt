@@ -58,7 +58,7 @@
                                 <ToggleMenuFlyoutItem Text="Enable images" IsChecked="{Binding Path=EnableImages}"/>
                                 <ToggleMenuFlyoutItem Text="Parse links from pages" IsChecked="{Binding Path=ParseLinksPages}"/>
                             </MenuFlyoutSubItem>
-                            <MenuFlyoutItem x:Name="menu" Text="Bookmarks"/>
+                            <MenuFlyoutItem x:Name="menu" Text="Bookmarks" Visibility="Collapsed"/>
                             <MenuFlyoutItem Text="Previous page" Click="PreviousPageMenuFlyoutItem_Click" IsEnabled="{Binding Path=HasPreviousPages}"/>
                             <MenuFlyoutItem Text="Next page" Click="NextPageMenuFlyoutItem_Click" IsEnabled="{Binding Path=HasNextPages}"/>
                             <MenuFlyoutItem Text="_" Click="MenuFlyoutItem_Click"/>

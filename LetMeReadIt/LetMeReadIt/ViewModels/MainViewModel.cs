@@ -39,6 +39,9 @@ namespace LetMeReadIt.ViewModels
         {
             _previousPages = new ObservableCollection<ParsedPage>();
             _nextPages = new ObservableCollection<ParsedPage>();
+
+            EnableImages = true;
+            ParseLinksPages = true;
         }
 
         #endregion
@@ -132,6 +135,8 @@ namespace LetMeReadIt.ViewModels
             CurrentPage = _previousPages.Last();
             _previousPages.Remove(CurrentPage);
 
+            Url = CurrentPage.Url;
+
             OnPropertyChanged("HasPreviousPages");
             OnPropertyChanged("HasNextPages");
         }
@@ -141,6 +146,8 @@ namespace LetMeReadIt.ViewModels
             _previousPages.Add(CurrentPage);
             CurrentPage = _nextPages.Last();
             _nextPages.Remove(CurrentPage);
+
+            Url = CurrentPage.Url;
 
             OnPropertyChanged("HasPreviousPages");
             OnPropertyChanged("HasNextPages");

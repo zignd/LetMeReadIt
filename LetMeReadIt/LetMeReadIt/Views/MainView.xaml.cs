@@ -85,6 +85,7 @@ namespace LetMeReadIt.Views
             try
             {
                 ViewModel.LoadNextPage();
+                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
             }
             catch (Exception ex)
             {
@@ -97,6 +98,7 @@ namespace LetMeReadIt.Views
             try
             {
                 ViewModel.LoadPreviousPage();
+                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
             }
             catch (Exception ex)
             {
