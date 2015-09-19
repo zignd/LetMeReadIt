@@ -1,0 +1,71 @@
+﻿<Page
+    x:Class="LetMeReadIt.Views.MainView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LetMeReadIt"
+    xmlns:common="using:LetMeReadIt.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <WebView Grid.Row="0" x:Name="MainWebView" NavigationStarting="MainWebView_NavigationStarting"/>
+        <Grid Grid.Row="1" HorizontalAlignment="Stretch" Height="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,2,0">
+                <Button Width="50"
+                        Height="40"
+                        Background="{x:Null}"
+                        Margin="5,0"
+                        IsEnabled="{Binding Path=HasCurrentPage}">
+                    <SymbolIcon Symbol="Refresh"/>
+                </Button>
+                <Rectangle Width="1" Fill="{ThemeResource ApplicationForegroundThemeBrush}" Margin="0,7"/>
+            </StackPanel>
+            <TextBox Grid.Column="1"
+                     x:Name="UrlTextBox"
+                     Text="{Binding Path=Url, Mode=TwoWay}"
+                     PlaceholderText="Add an URL here..."
+                     VerticalAlignment="Center"
+                     BorderBrush="{x:Null}"
+                     Margin="5,0"
+                     InputScope="Url"
+                     Padding="0,5"
+                     KeyUp="UrlTextBox_KeyUp"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Rectangle Width="1" Fill="{ThemeResource ApplicationForegroundThemeBrush}" Margin="0,7"/>
+                <Button Width="50" Height="40" Background="{x:Null}" Margin="5,0">
+                    <Button.Content>
+                        <SymbolIcon Symbol="More"/>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutSubItem Text="Settings">
+                                <ToggleMenuFlyoutItem Text="Enable images" IsChecked="{Binding Path=EnableImages}"/>
+                                <ToggleMenuFlyoutItem Text="Parse links from pages" IsChecked="{Binding Path=ParseLinksPages}"/>
+                            </MenuFlyoutSubItem>
+                            <MenuFlyoutItem x:Name="menu" Text="Bookmarks"/>
+                            <MenuFlyoutItem Text="Previous page" Click="PreviousPageMenuFlyoutItem_Click" IsEnabled="{Binding Path=HasPreviousPages}"/>
+                            <MenuFlyoutItem Text="Next page" Click="NextPageMenuFlyoutItem_Click" IsEnabled="{Binding Path=HasNextPages}"/>
+                            <MenuFlyoutItem Text="_" Click="MenuFlyoutItem_Click"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
