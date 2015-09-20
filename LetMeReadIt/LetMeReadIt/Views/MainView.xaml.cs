@@ -30,7 +30,8 @@ namespace LetMeReadIt.Views
     public sealed partial class MainView : Page
     {
         private ShareOperation _shareOperation;
-        private bool _isLinkFromTextBox;
+        //private bool _isLinkFromTextBox;
+        private bool _isFromNavigationButton;
 
         public MainViewModel ViewModel
         {
@@ -47,26 +48,38 @@ namespace LetMeReadIt.Views
 
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            await ViewModel.RefreshCurrentPageAsync();
-            MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+            if (ViewModel.CurrentPage.IsParsed)
+            {
+                await ViewModel.RefreshCurrentPageAsync();
+                MainWebView.NavigateToString(ViewModel.CurrentPage.ParsedPage.Content);
+            }
+            else
+            {
+                MainWebView.NavigateToString(ViewModel.CurrentPage.NotParsedPage.ToString());
+            }
         }
 
         private async void MainWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
         {
             try
             {
-                if (args.Uri != null)
+                // is coming from click on page
+                if (_isFromNavigationButton == false && args.Uri != null)
                 {
-                    if (_isLinkFromTextBox || ViewModel.ParseLinksPages)
+                    if (ViewModel.ParseLinksPages)
                     {
                         args.Cancel = true;
 
-                        await ViewModel.LoadCurrentPageFromUrlAsync(args.Uri.ToString());
-                        MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
-
-                        _isLinkFromTextBox = false;
+                        await ViewModel.LoadCurrentPageAsync(args.Uri.ToString());
+                        NavigateToCurrentPage(false);
+                    }
+                    else
+                    {
+                        await ViewModel.LoadCurrentPageAsync(args.Uri.ToString());
                     }
                 }
+
+                _isFromNavigationButton = false;
             }
             catch (Exception ex)
             {
@@ -80,10 +93,8 @@ namespace LetMeReadIt.Views
             {
                 try
                 {
-                    _isLinkFromTextBox = true;
-
-                    await ViewModel.LoadCurrentPageFromUrlAsync();
-                    MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+                    await ViewModel.LoadCurrentPageAsync();
+                    NavigateToCurrentPage(false);
                 }
                 catch (Exception ex)
                 {
@@ -92,9 +103,16 @@ namespace LetMeReadIt.Views
             }
         }
 
-        private void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.Url = "http://g1.globo.com/mundo/noticia/2015/09/papa-parte-rumo-havana-primeira-etapa-de-sua-viagem-cuba-e-eua.html";
+            try
+            {
+                ViewModel.Url = "https://en.wikipedia.org/wiki/C_Sharp_(programming_language)";
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         private void NextPageMenuFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -102,7 +120,7 @@ namespace LetMeReadIt.Views
             try
             {
                 ViewModel.LoadNextPage();
-                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+                NavigateToCurrentPage();
             }
             catch (Exception ex)
             {
@@ -115,7 +133,7 @@ namespace LetMeReadIt.Views
             try
             {
                 ViewModel.LoadPreviousPage();
-                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+                NavigateToCurrentPage();
             }
             catch (Exception ex)
             {
@@ -123,6 +141,16 @@ namespace LetMeReadIt.Views
             }
         }
         
+        private void NavigateToCurrentPage(bool isFromNavigationButton = true)
+        {
+            _isFromNavigationButton = isFromNavigationButton;
+
+            if (ViewModel.CurrentPage.IsParsed)
+                MainWebView.NavigateToString(ViewModel.CurrentPage.ParsedPage.Content);
+            else
+                MainWebView.Navigate(ViewModel.CurrentPage.NotParsedPage);
+        }
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             _shareOperation = e.Parameter as ShareOperation;
@@ -130,9 +158,12 @@ namespace LetMeReadIt.Views
             if (_shareOperation != null)
             {
                 ViewModel.Url = (await _shareOperation.Data.GetWebLinkAsync()).ToString();
-                await ViewModel.LoadCurrentPageFromUrlAsync();
+                await ViewModel.LoadCurrentPageAsync();
 
-                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+                if (ViewModel.CurrentPage.IsParsed)
+                    MainWebView.NavigateToString(ViewModel.CurrentPage.ParsedPage.Content);
+                else
+                    MainWebView.Navigate(ViewModel.CurrentPage.NotParsedPage);
             }
         }
     }

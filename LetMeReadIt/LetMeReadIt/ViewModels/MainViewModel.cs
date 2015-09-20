@@ -1,4 +1,5 @@
-﻿using LetMeReadIt.Models;
+﻿using LetMeReadIt.Common;
+using LetMeReadIt.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -19,15 +20,14 @@ namespace LetMeReadIt.ViewModels
         #region Constants
 
         private const string Resource = "https://readability.com/api/content/v1/parser?token={0}&url={1}";
-        private const string ApiKey = "393079ba45bbe480bef924bb8df3b8a27b0f8491";
 
         #endregion
 
         private string _url;
         private bool _isLoading;
-        private ParsedPage _currentPage;
-        private ObservableCollection<ParsedPage> _previousPages;
-        private ObservableCollection<ParsedPage> _nextPages;
+        private LetMePage _currentPage;
+        private ObservableCollection<LetMePage> _previousPages;
+        private ObservableCollection<LetMePage> _nextPages;
         private bool _enableImages;
         private bool _parseLinksPages;
 
@@ -37,8 +37,8 @@ namespace LetMeReadIt.ViewModels
 
         public MainViewModel()
         {
-            _previousPages = new ObservableCollection<ParsedPage>();
-            _nextPages = new ObservableCollection<ParsedPage>();
+            _previousPages = new ObservableCollection<LetMePage>();
+            _nextPages = new ObservableCollection<LetMePage>();
 
             EnableImages = true;
             ParseLinksPages = true;
@@ -60,7 +60,7 @@ namespace LetMeReadIt.ViewModels
             set { _isLoading = value; OnPropertyChanged(); }
         }
 
-        public ParsedPage CurrentPage
+        public LetMePage CurrentPage
         {
             get
             {
@@ -108,12 +108,10 @@ namespace LetMeReadIt.ViewModels
 
         #region Public Methods
 
-        public async Task LoadCurrentPageFromUrlAsync(string url = null)
+        public async Task LoadCurrentPageAsync(string url = null)
         {
             if (url != null)
                 Url = url;
-
-            var json = await ParsePageAsync(Url);
 
             if (CurrentPage != null)
             {
@@ -124,8 +122,16 @@ namespace LetMeReadIt.ViewModels
                 OnPropertyChanged("HasNextPages");
             }
 
-            CurrentPage = JsonConvert.DeserializeObject<ParsedPage>(json);
-            CurrentPage.Content = "<h2>" + CurrentPage.Title + "</h2><hr/>" + CurrentPage.Content;
+            if (ParseLinksPages)
+            {
+                var json = await ParsePageAsync(Url);
+                CurrentPage = new LetMePage { IsParsed = true, ParsedPage = JsonConvert.DeserializeObject<ParsedPage>(json) };
+                CurrentPage.ParsedPage.Content = "<h2>" + CurrentPage.ParsedPage.Title + "</h2><hr/>" + CurrentPage.ParsedPage.Content;
+            }
+            else
+            {
+                CurrentPage = new LetMePage { IsParsed = false, NotParsedPage = new Uri(Url) };
+            }
         }
 
         public void LoadPreviousPage()
@@ -134,7 +140,7 @@ namespace LetMeReadIt.ViewModels
             CurrentPage = _previousPages.Last();
             _previousPages.Remove(CurrentPage);
 
-            Url = CurrentPage.Url;
+            Url = CurrentPage.IsParsed ? CurrentPage.ParsedPage.Url : CurrentPage.NotParsedPage.ToString();
 
             OnPropertyChanged("HasPreviousPages");
             OnPropertyChanged("HasNextPages");
@@ -146,7 +152,7 @@ namespace LetMeReadIt.ViewModels
             CurrentPage = _nextPages.Last();
             _nextPages.Remove(CurrentPage);
 
-            Url = CurrentPage.Url;
+            Url = CurrentPage.IsParsed ? CurrentPage.ParsedPage.Url : CurrentPage.NotParsedPage.ToString();
 
             OnPropertyChanged("HasPreviousPages");
             OnPropertyChanged("HasNextPages");
@@ -154,9 +160,9 @@ namespace LetMeReadIt.ViewModels
 
         public async Task RefreshCurrentPageAsync()
         {
-            var json = await ParsePageAsync(CurrentPage.Url);
-            CurrentPage = JsonConvert.DeserializeObject<ParsedPage>(json);
-            CurrentPage.Content = "<h2>" + CurrentPage.Title + "</h2><hr/>" + CurrentPage.Content;
+            var json = await ParsePageAsync(CurrentPage.ParsedPage.Url);
+            CurrentPage = new LetMePage { IsParsed = true, ParsedPage = JsonConvert.DeserializeObject<ParsedPage>(json) };
+            CurrentPage.ParsedPage.Content = "<h2>" + CurrentPage.ParsedPage.Title + "</h2><hr/>" + CurrentPage.ParsedPage.Content;
         }
 
         #endregion
@@ -165,7 +171,7 @@ namespace LetMeReadIt.ViewModels
 
         private async Task<string> ParsePageAsync(string url)
         {
-            var requestUri = new Uri(string.Format(Resource, ApiKey, url));
+            var requestUri = new Uri(string.Format(Resource, Settings.ApiKey, url));
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             var client = new HttpClient();

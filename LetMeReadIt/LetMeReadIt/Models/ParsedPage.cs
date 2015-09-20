@@ -53,5 +53,10 @@ namespace LetMeReadIt.Models
 
         [JsonProperty(PropertyName = "rendered_pages")]
         public int RenderedPages { get; set; }
+
+        public override string ToString()
+        {
+            return Url;
+        }
     }
 }
