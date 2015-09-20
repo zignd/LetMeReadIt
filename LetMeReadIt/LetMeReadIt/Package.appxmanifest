@@ -25,6 +25,7 @@
           <uap:ShareTarget Description="Let Me Read It">
             <uap:DataFormat>URI</uap:DataFormat>
             <uap:DataFormat>Text</uap:DataFormat>
+            <uap:DataFormat>WebLink</uap:DataFormat>
           </uap:ShareTarget>
         </uap:Extension>
       </Extensions>

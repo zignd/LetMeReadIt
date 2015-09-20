@@ -31,7 +31,8 @@
                         Height="40"
                         Background="{x:Null}"
                         Margin="5,0"
-                        IsEnabled="{Binding Path=HasCurrentPage}">
+                        IsEnabled="{Binding Path=HasCurrentPage}"
+                        Click="RefreshButton_Click">
                     <SymbolIcon Symbol="Refresh"/>
                 </Button>
                 <Rectangle Width="1" Fill="{ThemeResource ApplicationForegroundThemeBrush}" Margin="0,7"/>
@@ -55,8 +56,8 @@
                     <Button.Flyout>
                         <MenuFlyout>
                             <MenuFlyoutSubItem Text="Settings">
-                                <ToggleMenuFlyoutItem Text="Enable images" IsChecked="{Binding Path=EnableImages}"/>
-                                <ToggleMenuFlyoutItem Text="Parse links from pages" IsChecked="{Binding Path=ParseLinksPages}"/>
+                                <ToggleMenuFlyoutItem Text="Enable images" IsChecked="{Binding Path=EnableImages, Mode=TwoWay}"/>
+                                <ToggleMenuFlyoutItem Text="Parse links from pages" IsChecked="{Binding Path=ParseLinksPages, Mode=TwoWay}"/>
                             </MenuFlyoutSubItem>
                             <MenuFlyoutItem x:Name="menu" Text="Bookmarks" Visibility="Collapsed"/>
                             <MenuFlyoutItem Text="Previous page" Click="PreviousPageMenuFlyoutItem_Click" IsEnabled="{Binding Path=HasPreviousPages}"/>

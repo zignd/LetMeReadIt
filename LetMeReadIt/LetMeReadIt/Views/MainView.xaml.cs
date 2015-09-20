@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer.ShareTarget;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
@@ -28,6 +29,9 @@ namespace LetMeReadIt.Views
     /// </summary>
     public sealed partial class MainView : Page
     {
+        private ShareOperation _shareOperation;
+        private bool _isLinkFromTextBox;
+
         public MainViewModel ViewModel
         {
             get { return DataContext as MainViewModel; }
@@ -37,8 +41,14 @@ namespace LetMeReadIt.Views
         public MainView()
         {
             ViewModel = new MainViewModel();
-
+            
             this.InitializeComponent();
+        }
+
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            await ViewModel.RefreshCurrentPageAsync();
+            MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
         }
 
         private async void MainWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
@@ -47,10 +57,15 @@ namespace LetMeReadIt.Views
             {
                 if (args.Uri != null)
                 {
-                    args.Cancel = true;
-                    
-                    await ViewModel.LoadCurrentPageFromUrlAsync(args.Uri.ToString());
-                    MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+                    if (_isLinkFromTextBox || ViewModel.ParseLinksPages)
+                    {
+                        args.Cancel = true;
+
+                        await ViewModel.LoadCurrentPageFromUrlAsync(args.Uri.ToString());
+                        MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
+
+                        _isLinkFromTextBox = false;
+                    }
                 }
             }
             catch (Exception ex)
@@ -65,6 +80,8 @@ namespace LetMeReadIt.Views
             {
                 try
                 {
+                    _isLinkFromTextBox = true;
+
                     await ViewModel.LoadCurrentPageFromUrlAsync();
                     MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
                 }
@@ -103,6 +120,19 @@ namespace LetMeReadIt.Views
             catch (Exception ex)
             {
                 // TODO: handle it properly
+            }
+        }
+        
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            _shareOperation = e.Parameter as ShareOperation;
+
+            if (_shareOperation != null)
+            {
+                ViewModel.Url = (await _shareOperation.Data.GetWebLinkAsync()).ToString();
+                await ViewModel.LoadCurrentPageFromUrlAsync();
+
+                MainWebView.NavigateToString(ViewModel.CurrentPage.Content);
             }
         }
     }

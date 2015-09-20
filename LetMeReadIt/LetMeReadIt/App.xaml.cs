@@ -105,5 +105,38 @@ namespace LetMeReadIt
             //TODO: Save application state and stop any background activity
             deferral.Complete();
         }
+
+        #region Share Target
+
+        protected override void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
+        {
+            var rootFrame = CreateRootFrame();
+            rootFrame.Navigate(typeof(MainView), args.ShareOperation);
+            Window.Current.Activate();
+        }
+
+        private Frame CreateRootFrame()
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            // Do not repeat app initialization when the Window already has content,
+            // just ensure that the window is active
+            if (rootFrame == null)
+            {
+                // Create a Frame to act as the navigation context and navigate to the first page
+                rootFrame = new Frame();
+
+                // Set the default language
+                rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];
+                rootFrame.NavigationFailed += OnNavigationFailed;
+
+                // Place the frame in the current Window
+                Window.Current.Content = rootFrame;
+            }
+
+            return rootFrame;
+        }
+
+        #endregion
     }
 }

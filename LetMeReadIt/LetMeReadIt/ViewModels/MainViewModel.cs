@@ -68,12 +68,6 @@ namespace LetMeReadIt.ViewModels
             }
             set
             {
-                if (_currentPage != null)
-                {
-                    _previousPages.Add(_currentPage);
-                    OnPropertyChanged("HasPreviousPages");
-                }
-
                 _currentPage = value;
                 OnPropertyChanged("HasCurrentPage");
             }
@@ -119,14 +113,19 @@ namespace LetMeReadIt.ViewModels
             if (url != null)
                 Url = url;
 
-            var requestUri = new Uri(string.Format(Resource, ApiKey, Url));
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            var json = await ParsePageAsync(Url);
 
-            var client = new HttpClient();
-            var responseMessage = await client.SendRequestAsync(requestMessage);
-            var json = await responseMessage.Content.ReadAsStringAsync();
+            if (CurrentPage != null)
+            {
+                _previousPages.Add(_currentPage);
+                _nextPages.Clear();
+
+                OnPropertyChanged("HasPreviousPages");
+                OnPropertyChanged("HasNextPages");
+            }
 
             CurrentPage = JsonConvert.DeserializeObject<ParsedPage>(json);
+            CurrentPage.Content = "<h2>" + CurrentPage.Title + "</h2><hr/>" + CurrentPage.Content;
         }
 
         public void LoadPreviousPage()
@@ -151,6 +150,29 @@ namespace LetMeReadIt.ViewModels
 
             OnPropertyChanged("HasPreviousPages");
             OnPropertyChanged("HasNextPages");
+        }
+
+        public async Task RefreshCurrentPageAsync()
+        {
+            var json = await ParsePageAsync(CurrentPage.Url);
+            CurrentPage = JsonConvert.DeserializeObject<ParsedPage>(json);
+            CurrentPage.Content = "<h2>" + CurrentPage.Title + "</h2><hr/>" + CurrentPage.Content;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private async Task<string> ParsePageAsync(string url)
+        {
+            var requestUri = new Uri(string.Format(Resource, ApiKey, url));
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
+
+            var client = new HttpClient();
+            var responseMessage = await client.SendRequestAsync(requestMessage);
+            var json = await responseMessage.Content.ReadAsStringAsync();
+
+            return json;
         }
 
         #endregion
